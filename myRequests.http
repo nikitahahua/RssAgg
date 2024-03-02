@@ -1,0 +1,15 @@
+POST http://localhost:8080/v1/users
+Content-Type: application/json
+
+{
+  "name": "super hero"
+}
+
+### create feed request
+POST http://localhost:8080/v1/feeds
+Content-Type: application/json
+
+{
+"name": "super hero",
+"url": "youtube.com"
+}
