@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type apiConfig struct {
@@ -38,7 +39,11 @@ func main() {
 		log.Fatal("cant connect to the data base by url : \n" + dbUrl)
 	}
 
-	apiCfg := apiConfig{DB: database.New(connection)}
+	dbQueries := database.New(connection)
+
+	apiCfg := apiConfig{
+		DB: dbQueries,
+	}
 
 	router := chi.NewRouter()
 
@@ -91,11 +96,20 @@ func main() {
 		apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow),
 	)
 
+	v1Router.Get(
+		"/user_posts",
+		apiCfg.middlewareAuth(apiCfg.handleGetPostsForUser),
+	)
+
 	router.Mount("/v1", v1Router)
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: router,
 	}
+
+	const collectionConcurrency = 10
+	const collectionInterval = time.Minute
+	go startScraping(dbQueries, collectionConcurrency, collectionInterval)
 
 	log.Printf("Serving on port: %s\n", port)
 	log.Fatal(srv.ListenAndServe())
